@@ -104,7 +104,8 @@ discounts(
    LEFT JOIN discounts d
    ON d.t_shirt_id = t.t_shirt_id
    AND CURDATE() BETWEEN d.start_date AND d.end_date
-   WHERE t.brand = 'Nike' AND t.size = 'L';
+   WHERE t.brand = 'Nike' AND t.size = 'L';```
+
 ---
 
 ## 🧠 Prompting Strategy
