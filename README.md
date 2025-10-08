@@ -19,9 +19,15 @@ Powered by **LangChain’s SQLDatabaseChain**, **Google Gemini 2.5 Flash**, sema
 
 > Add your images to the repo under `./screenshots/` and update file names below.
 
-![App — Home](screenshots/app-home.png)
+<img width="1909" height="811" alt="image" src="https://github.com/user-attachments/assets/fb86e6c4-24df-4493-b457-61415ca7bc26" />
 
-![App — Answer Example](screenshots/answer-example.png)
+<img width="1894" height="810" alt="image" src="https://github.com/user-attachments/assets/90051267-f204-4ef3-9db1-b154252c140a" />
+
+<img width="1856" height="899" alt="image" src="https://github.com/user-attachments/assets/bd37ee2b-229d-45c7-a04a-1035f9ff03dd" />
+
+<img width="1843" height="955" alt="image" src="https://github.com/user-attachments/assets/ffaeecf5-0143-4bb2-96f8-ef263389d461" />
+
+
 
 ---
 
