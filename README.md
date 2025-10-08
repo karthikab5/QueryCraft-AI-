@@ -54,10 +54,12 @@ Built with **LangChain’s SQLDatabaseChain**, **Google Gemini 2.5 Flash**, **se
 
 ---
 
-├── main.py # Streamlit UI (input form, run, display)
-├── data_base.py # DB connection, embeddings/Chroma, few-shot selector, SQL chain
-├── few_shot.py # Example Q/A/SQL triples used for few-shot prompting
-
+## 🗂️ **Project Structure**
+├── main.py # Streamlit UI (input, execution, display)
+├── data_base.py # MySQL connection, embeddings, few-shot selector, SQL chain
+├── few_shot.py # Example Q/A/SQL triplets for semantic prompting
+├── .env # API keys and DB credentials (excluded from repo)
+└── screenshots/ # UI screenshots for README
 
 ---
 
