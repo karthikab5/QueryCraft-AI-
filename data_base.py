@@ -1,0 +1,60 @@
+from dotenv import load_dotenv
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_community.utilities import SQLDatabase
+from langchain_experimental.sql import SQLDatabaseChain
+from langchain_huggingface import HuggingFaceEmbeddings
+from langchain.chains.sql_database.prompt import PROMPT_SUFFIX, _mysql_prompt
+from langchain_core.example_selectors import SemanticSimilarityExampleSelector
+from langchain_chroma import Chroma
+from langchain.prompts import FewShotPromptTemplate
+from few_shot import few_shots
+from langchain.prompts import PromptTemplate
+import os
+load_dotenv()
+def db_chain():
+    api_key = os.getenv("GOOGLE_API_KEY")
+    llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.1)
+
+    db_user = 'root'
+    db_password = '1435'
+    db_host = 'localhost'
+    db_name = 'atliq_tshirts'
+    db = SQLDatabase.from_uri(f"mysql+pymysql://{db_user}:{db_password}@{db_host}/{db_name}", sample_rows_in_table_info=3)
+    db_chain = SQLDatabaseChain.from_llm(llm,db)
+    embeddings = HuggingFaceEmbeddings(model_name = "sentence-transformers/all-mpnet-base-v2")
+    to_vectorize = [" ".join(example.values()) for example in few_shots]
+    vectorstore = Chroma.from_texts(to_vectorize, embeddings, metadatas=few_shots)
+    example_selector = SemanticSimilarityExampleSelector(
+        vectorstore=vectorstore,k=2)
+    table_info = db.get_table_info()
+    mysql_prompt = """You are a MySQL expert. Use ONLY these tables/columns: {table_info}. Given an input question, first create a syntactically correct MySQL query to run, then look at the results of the query and return the answer to the input question.
+        Unless the user specifies in the question a specific number of examples to obtain, query for at most {top_k} results using the LIMIT clause as per MySQL. You can order the results to return the most informative data in the database.
+        Never query for all columns from a table. You must query only the columns that are needed to answer the question. Wrap each column name in backticks (`) to denote them as delimited identifiers.
+        Pay attention to use only the column names you can see in the tables below. Be careful to not query for columns that do not exist. Also, pay attention to which column is in which table.
+        Pay attention to use CURDATE() function to get the current date, if the question involves "today". Never answer with the query unless the user explicitly ask for always answer with the output either in string or in numbers.
+        
+        Use the following format:
+        Format (exactly):
+        Question: {{input}}
+        SQLQuery: <query to run with no preamble>
+        SQLResult: <result of the SQLQuery>
+        Answer: <single numeric value>
+
+        
+        No pre-amble.
+        """
+
+    example_prompt = PromptTemplate(
+            input_variables=["Question", "SQLQuery", "SQLResult","Answer"],
+            template="\nQuestion: {Question}\nSQLQuery: {SQLQuery}\nSQLResult: {SQLResult}\nAnswer: {Answer}",
+        )
+
+    few_shot_prompt = FewShotPromptTemplate(
+            example_selector=example_selector,
+            example_prompt=example_prompt,
+            prefix=mysql_prompt,
+            suffix=PROMPT_SUFFIX,
+            input_variables=["input", "table_info", "top_k"], #These variables are used in the prefix and suffix
+        )
+    chain = SQLDatabaseChain.from_llm(llm, db, verbose=True, prompt=few_shot_prompt)
+    return chain
