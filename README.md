@@ -1,21 +1,32 @@
-# QueryCraft-AI- Natural Language → SQL for MySQL (Streamlit + LangChain + Gemini)
+# 🧠 **QueryCraft-AI**  
+### *Natural Language → SQL for MySQL (Streamlit + LangChain + Gemini)*  
 
-Ask business questions in plain English and get answers from your **MySQL** database — no SQL required.  
-Powered by **LangChain’s SQLDatabaseChain**, **Google Gemini 2.5 Flash**, semantic **few-shot prompting** (Chroma + HuggingFace), and a clean **Streamlit** UI.
-
----
-
-## ✨ Features
-
-- 🧠 **LLM → SQL**: Converts your question to safe, schema-aware MySQL (avoids `SELECT *`, uses backticks for columns)
-- 🗃️ **Real database**: Connects via SQLAlchemy URL (`mysql+pymysql://...`)
-- 🧩 **Few-shot guidance**: Embeddings + Chroma pick the best examples to steer SQL generation
-- 📅 **Date-aware**: Uses `CURDATE()` for “today” queries
-- 🖥️ **Streamlit app**: Caches the chain for fast, stable re-runs
+Ask business questions in plain English and get instant answers from your **MySQL** database — no SQL required.  
+Built with **LangChain’s SQLDatabaseChain**, **Google Gemini 2.5 Flash**, **semantic few-shot prompting** (Chroma + HuggingFace), and a clean **Streamlit UI**.
 
 ---
 
-## 🖼️ Screenshots
+## ✨ **Key Features**
+
+- 🧠 **LLM → SQL Conversion**  
+  Converts your natural-language questions into **safe, schema-aware MySQL queries** — avoids `SELECT *`, uses backticks, and respects table structure.
+
+- 🗃️ **Real Database Connectivity**  
+  Connects directly to MySQL using **SQLAlchemy** with full CRUD guardrails.  
+  `mysql+pymysql://username:password@localhost:3306/database_name`
+
+- 🧩 **Few-Shot Semantic Guidance**  
+  Embeddings (HuggingFace + Chroma) select the most relevant Q/A examples to guide SQL generation.
+
+- 📅 **Date-Aware Reasoning**  
+  Automatically interprets “today,” “this week,” or “last month” using `CURDATE()` and SQL functions.
+
+- ⚡ **Streamlit UI + Caching**  
+  Smooth, stable interaction via `@st.cache_resource` — optimized for repeated queries.
+
+---
+
+## 🖥️ **Screenshots**
 
 > Add your images to the repo under `./screenshots/` and update file names below.
 
@@ -31,45 +42,59 @@ Powered by **LangChain’s SQLDatabaseChain**, **Google Gemini 2.5 Flash**, sema
 
 ---
 
-## 🧰 Tech Stack
+## 🧰 **Tech Stack**
 
-- **Frontend / App**: Streamlit  
-- **LLM Orchestration**: LangChain (`SQLDatabaseChain`)  
-- **LLM**: Google Gemini 2.5 Flash (`langchain_google_genai`)  
-- **Semantic Selector**: HuggingFace embeddings + Chroma  
-- **Database**: MySQL (SQLAlchemy + PyMySQL)
+| Layer | Tools |
+|-------|-------|
+| 🖥️ Frontend / App | Streamlit |
+| 🧠 LLM Orchestration | LangChain (`SQLDatabaseChain`) |
+| 💬 Model | Google Gemini 2.5 Flash (`langchain_google_genai`) |
+| 🔍 Semantic Selector | HuggingFace Embeddings + Chroma |
+| 🗃️ Database | MySQL (SQLAlchemy + PyMySQL) |
 
 ---
 
-## 📦 Project Structure
 ├── main.py # Streamlit UI (input form, run, display)
 ├── data_base.py # DB connection, embeddings/Chroma, few-shot selector, SQL chain
 ├── few_shot.py # Example Q/A/SQL triples used for few-shot prompting
 
-## 🧪 Usage
 
-- Ask questions like:
+---
 
-   “How many t-shirts do we have left for Nike, size XS, color white?”
+## 🧪 **Usage**
 
-   “Total sales if we sell all L size Nike today after discounts — return only the number.”
+Ask questions like:
 
-   “Top 5 brands by inventory count.”
+- “How many t-shirts do we have left for Nike, size XS, color white?”  
+- “Total sales if we sell all L size Nike today after discounts — return only the number.”  
+- “Top 5 brands by inventory count.”
 
-   What happens under the hood
+**Behind the scenes:**
+1. Your question is embedded → compared with few-shots → best example selected.  
+2. Gemini generates schema-aware SQL with backticks and joins.  
+3. SQL executes via MySQL connection → results shown instantly in Streamlit.  
 
-   Your question is matched with the closest few-shots (from few_shot.py) using embeddings.The model generates schema-aware SQL (no non-existent columns; backticks enforced).
-   SQL runs against MySQL; the app shows a concise answer.
+---
 
-## 🧱 Schema Assumptions (example)
+## 🧱 **Sample Schema**
 
-   Adjust to your dataset. A common pattern this app supports:
+```sql
+t_shirts(
+  t_shirt_id INT,
+  brand VARCHAR(50),
+  color VARCHAR(20),
+  size VARCHAR(5),
+  price DECIMAL(10,2),
+  stock_quantity INT
+)
 
-   t_shirts(t_shirt_id, brand, color, size, price, stock_quantity, …)
+discounts(
+  t_shirt_id INT,
+  pct_discount DECIMAL(5,2),
+  start_date DATE,
+  end_date DATE
+)
 
-   discounts(t_shirt_id, pct_discount, start_date, end_date)
-
-   To compute “revenue after discounts for brand/size today,” a typical query looks like:
    
    SELECT
    COALESCE(ROUND(SUM( (t.price * (1 - COALESCE(d.pct_discount,0)/100.0)) * t.stock_quantity ), 2), 0) AS revenue_today
@@ -78,6 +103,8 @@ Powered by **LangChain’s SQLDatabaseChain**, **Google Gemini 2.5 Flash**, sema
    ON d.t_shirt_id = t.t_shirt_id
    AND CURDATE() BETWEEN d.start_date AND d.end_date
    WHERE t.brand = 'Nike' AND t.size = 'L';
+---
+
 ## 🧠 Prompting Strategy
 
   The base prompt instructs the model to:
@@ -95,31 +122,86 @@ Powered by **LangChain’s SQLDatabaseChain**, **Google Gemini 2.5 Flash**, sema
    SQLQuery: ...
    SQLResult: ...
    Answer: ...
-## 🛠️ Troubleshooting
+---
 
-  App “collapses” after one run
-  Don’t assign to Streamlit functions (e.g., st.header = "..."). Always call them: st.header("...").
-  Use @st.cache_resource to cache the chain so re-runs are stable.
+⚙️ Troubleshooting
+| Issue                                 | Fix                                                                                        |
+| ------------------------------------- | ------------------------------------------------------------------------------------------ |
+| Streamlit app collapses after one run | Don’t assign functions (e.g., `st.header = "..."`), always *call* them: `st.header("...")` |
+| Re-runs too slow                      | Use `@st.cache_resource` for chain caching                                                 |
+| Ambiguous queries                     | Add custom few-shots to `few_shot.py`                                                      |
+| MySQL connection error                | Check credentials, driver (`pymysql`), and database URL                                    |
+| No Google API access                  | Ensure `GOOGLE_API_KEY` is set and `langchain_google_genai` installed                      |
 
-  Ambiguous/complex queries
-  Add a matching few-shot for the exact pattern (e.g., brand+size+discount join).
-  Consider enabling use_query_checker=True and return_intermediate_steps=True when building SQLDatabaseChain.
+---
 
-  MySQL connection errors
-  Verify credentials, host/port, and that the DB exists.
-  Confirm the driver is installed (pymysql, sqlalchemy) and the URL is correct.
-
-  No Google API access
-  Make sure GOOGLE_API_KEY is set and langchain_google_genai is installed.
 ## 🗺️ Roadmap
 
-  Query checker + intermediate steps for explainability
+✅ Query checker + explainability with return_intermediate_steps=True
 
-  “Show SQL” toggle + CSV export
+✅ “Show SQL” toggle + CSV export
 
-  Optional demo dataset for public testing
+🧩 Demo dataset for quick testing
 
-  Dockerfile for easy deployment 
+🐳 Dockerfile for easy deployment
+
+ ---
+## 🔭 Future Scope: MCP, UTCP & AgentKit Integration
+
+⚡ 1. Model Context Protocol (MCP)
+
+Goal: Make QueryCraft-AI portable across LLM ecosystems by exposing standardized tools like:
+
+get_schema() → returns metadata
+
+run_sql(query) → executes read-only SQL safely
+
+discounted_revenue(brand, size, date) → predefined helper
+
+✅ Deliverables
+
+/mcp/ package
+
+Auth, audit logging, and rate-limit docs
+
+⚡ 2. Universal Tool Calling Protocol (UTCP)
+
+Goal: Direct low-latency calls to analytics endpoints (/sql/run, /metrics/revenue_today) without wrapper servers.
+
+✅ Deliverables
+
+/utcp/manifest.json
+
+Benchmarks for MCP vs UTCP performance
+
+⚡ 3. OpenAI Apps + AgentKit Integration
+
+Goal: Bring QueryCraft-AI inside ChatGPT with Apps SDK and AgentKit — no local install needed.
+
+Guided flow: “Question → SQL Plan → Execution → Answer”
+
+Built-in guardrails, UI panel, and CSV export
+
+AgentKit for step-by-step validation and evals
+
+✅ Deliverables
+
+/apps/ folder
+
+App logs, evals, and “Show SQL” toggle
+
+---
+
+## ⚡ 4. Security & Compliance
+
+Read-only DB roles & parameterized queries
+
+Query timeouts and rate limiting
+
+Log sanitization & PII scrubbing
+
+Key rotation & explicit consent for data retention
+
 
   
   
