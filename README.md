@@ -78,37 +78,6 @@ Ask questions like:
 
 ---
 
-## 🧱 **Sample Schema**
-
-```sql
-t_shirts(
-  t_shirt_id INT,
-  brand VARCHAR(50),
-  color VARCHAR(20),
-  size VARCHAR(5),
-  price DECIMAL(10,2),
-  stock_quantity INT
-)
-
-discounts(
-  t_shirt_id INT,
-  pct_discount DECIMAL(5,2),
-  start_date DATE,
-  end_date DATE
-)
-
-   
-   SELECT
-   COALESCE(ROUND(SUM( (t.price * (1 - COALESCE(d.pct_discount,0)/100.0)) * t.stock_quantity ), 2), 0) AS revenue_today
-   FROM t_shirts t
-   LEFT JOIN discounts d
-   ON d.t_shirt_id = t.t_shirt_id
-   AND CURDATE() BETWEEN d.start_date AND d.end_date
-   WHERE t.brand = 'Nike' AND t.size = 'L';
-,,,
-'''
-
----
 
 ## 🧠 Prompting Strategy
 
